@@ -1,5 +1,76 @@
 # Changelog
 
+## [1.3.9] - 2026-04-21
+
+### Added
+- **Native Win32 local client (`anetmrc_l.exe`).**  The DOS door is a
+  16-bit MZ executable, so `anetmrc.exe --local` no longer runs on any
+  64-bit Windows.  The new `anetmrc_l.exe` is a native Win32 console
+  application (statically linked, no DLL dependencies beyond what
+  Windows ships) that reuses `dosdoor/main.c` and `dosdoor/bridge.c`
+  via `-DANETMRC_LOCAL_ONLY`, and substitutes a new
+  `helper_win32/fossil_win32.c` for the INT&nbsp;14h FOSSIL driver.
+  Uses bridge slot `ANETDOS0.OUT/.IN` so it does not collide with a
+  live node&nbsp;1.  Ships in both the regular and XP packages.
+- **Platform shim in `dosdoor/common.h`.**  `anet_delay()` and
+  `anet_idle_hint()` abstract `delay()` / `INT&nbsp;28h` (DOS) vs
+  `Sleep()` / no-op (Win32), letting `main.c` compile under both
+  OpenWatcom 2.0 and mingw-w64 i686.
+
+### Changed
+- **Double-buffered rendering in `anetmrc_l.exe`.**  All output goes
+  through an off-screen 80&times;25 `CHAR_INFO` framebuffer.  The ANSI
+  escape interpreter writes cursor moves, SGR changes, and erases into
+  the buffer locally; each `fossil_puts` / `fossil_printf` /
+  `fossil_cls` call ends with one atomic `WriteConsoleOutputA` of the
+  dirty row range.  No flicker during input redraws, even on Windows 7
+  conhost.  Dirty-row tracking keeps small updates (one-line input
+  rewrites on every keystroke) to a single-row blit.
+- **`ENABLE_VIRTUAL_TERMINAL_PROCESSING` not required.**  The interpreter
+  handles ANSI SGR/CUP/ED/EL escapes directly via
+  `SetConsoleTextAttribute` / `SetConsoleCursorPosition` /
+  `FillConsoleOutput*`, so the client renders correctly on Windows XP
+  through 11 without relying on the Windows&nbsp;10 1511+ VT mode.
+- **Forced console font (Lucida Console 8&times;16) and locked window
+  chrome.**  `SetCurrentConsoleFontEx` pins the font on Vista+ for a
+  predictable look; `SetWindowLong` strips `WS_MAXIMIZEBOX` and
+  `WS_THICKFRAME` so the window can't be accidentally resized, and
+  `DeleteMenu` on the system menu drops `SC_CLOSE`/`SC_SIZE`/
+  `SC_MAXIMIZE`.  Original style, buffer size, cursor visibility, code
+  page, and window title are all saved at init and restored on exit so
+  the parent shell is left exactly as it was.
+- **Cursor hidden in `anetmrc_l.exe`.**  The DOS door doesn't rely on
+  a visible cursor; hiding it kills the caret-blink flicker during
+  rapid input redraws on legacy conhost.
+- **Screen buffer collapsed to 80&times;25.**  Removes the scrollbar
+  and the empty dead zone below the content.
+- **DOS door scrollback raised to 250 lines (was 100).**  `/bbses`
+  returns 170+ rows on a populated network; users could no longer
+  scroll to the top.  `MSG_MAX` is 250, `MSG_LEN` 160 (was 200).
+  `g_msgs[250][160] = 40&nbsp;KB` is auto-placed by Watcom's compact
+  model in the far-data segment `main13_DATA`, so DGROUP stays well
+  under the 64&nbsp;KB limit (~45&nbsp;KB used).
+- Version strings bumped to `1.3.9`.
+
+
+## [1.3.8-xp] - 2026-04-20
+
+### Added
+- **Windows XP SP3 build (`anetmrc_v1.3.8_xp.zip`).**  Parallel build
+  target for users still running XP SP3.  No source changes from 1.3.8
+  beyond a compile-time shim: `helper_protocol.c` gains an
+  `ANETMRC_XP_BUILD`-gated wrapper around `GetTickCount64` (Vista+) that
+  tracks 49.7-day wraps using plain `GetTickCount`, and
+  `helper_build_win32_xp.sh` passes `_WIN32_WINNT=0x0501` /
+  `--major-subsystem-version 5 --minor-subsystem-version 1` so the
+  resulting PE loads on XP.  The DOS door (`anetmrc.exe`) is unchanged
+  — 16-bit DOS has no Windows version dependency.
+- **`README_XP.TXT`** packaged at the root of the XP zip documents the
+  differences and the TLS caveat (XP SP3's SChannel only negotiates
+  TLS&nbsp;1.0; if the MRC server refuses that, the build can't connect
+  — an OS crypto-stack limit, not a bridge bug).
+
+
 ## [1.3.8] - 2026-04-18
 
 ### Fixed
@@ -126,7 +197,9 @@ Baseline functionality:
 
 ## Notes
 
-[1.3.8]: https://github.com/YOURNAME/anetmrc/releases/tag/v1.3.8
-[1.3.7]: https://github.com/YOURNAME/anetmrc/releases/tag/v1.3.7
-[1.3.6]: https://github.com/YOURNAME/anetmrc/releases/tag/v1.3.6
-[1.3.5]: https://github.com/YOURNAME/anetmrc/releases/tag/v1.3.5
+[1.3.9]:    https://github.com/YOURNAME/anetmrc/releases/tag/v1.3.9
+[1.3.8-xp]: https://github.com/YOURNAME/anetmrc/releases/tag/v1.3.8-xp
+[1.3.8]:    https://github.com/YOURNAME/anetmrc/releases/tag/v1.3.8
+[1.3.7]:    https://github.com/YOURNAME/anetmrc/releases/tag/v1.3.7
+[1.3.6]:    https://github.com/YOURNAME/anetmrc/releases/tag/v1.3.6
+[1.3.5]:    https://github.com/YOURNAME/anetmrc/releases/tag/v1.3.5
