@@ -8,6 +8,22 @@
 #include <security.h>
 #include <schannel.h>
 
+#ifdef ANETMRC_XP_BUILD
+/* GetTickCount64 is Vista+. On XP, synthesize a 64-bit tick from the 32-bit
+ * GetTickCount() by accumulating wraps (~every 49.7 days). Single-threaded
+ * bridge, so no locking required. */
+static ULONGLONG anet_gettickcount64_xp(void)
+{
+    static DWORD last_low = 0;
+    static DWORD high = 0;
+    DWORD now = GetTickCount();
+    if (now < last_low) high++;
+    last_low = now;
+    return ((ULONGLONG)high << 32) | now;
+}
+#define GetTickCount64() anet_gettickcount64_xp()
+#endif
+
 static void bridge_write(const char *fmt, ...);
 static void bridge_write_listing(const char *fmt, ...);
 

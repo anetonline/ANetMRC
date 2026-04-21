@@ -35,3 +35,16 @@ $CC -O2 -Wall -Wextra \
 
 # Report the config build.
 echo "Built: $OUTDIR/config.exe"
+
+# Build the native Win32 local client: anetmrc_l.exe.
+#   - Shares main.c + bridge.c with the DOS door (same pipe-code ANSI rendering,
+#     same bridge file protocol, same scancode dispatch).
+#   - Substitutes fossil_win32.c for the INT 14h FOSSIL driver.
+#   - -DANETMRC_LOCAL_ONLY forces local mode, skips dropfile parsing.
+$CC -O2 -Wall -Wextra -DANETMRC_LOCAL_ONLY \
+  -I ../dosdoor \
+  -o "$OUTDIR/anetmrc_l.exe" \
+  ../dosdoor/main.c ../dosdoor/bridge.c fossil_win32.c
+
+# Report the local-client build.
+echo "Built: $OUTDIR/anetmrc_l.exe"

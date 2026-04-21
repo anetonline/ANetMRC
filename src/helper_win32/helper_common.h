@@ -13,6 +13,6 @@
 
 /* MRC protocol VERSION_INFO sent in the handshake and CTCP VERSION replies.
  * Format: CLIENT/Platform.Arch/ProtocolVersion. */
-#define ANETMRC_VERSION_INFO "ANETMRC/Windows.i386/1.3.8"
+#define ANETMRC_VERSION_INFO "ANETMRC/Windows.i386/1.3.9"
 
 #endif
