@@ -1,12 +1,16 @@
 /* main.c — ANETMRC DOS door: handles handle entry, chat UI, slash commands,
- * FOSSIL serial I/O, and the bridge-file protocol. */
+ * FOSSIL serial I/O, and the bridge-file protocol.
+ *
+ * Also compiled as anetmrc_l.exe — the native Win32 local client — by
+ * helper_win32/helper_build_win32.sh with -DANETMRC_LOCAL_ONLY. In that
+ * build, fossil.h is implemented by fossil_win32.c (console I/O), dropfile
+ * is not linked, and --local is the only mode. */
 
 #include "common.h"
 #include "fossil.h"
 #include "dropfile.h"
 #include "bridge.h"
 #include <time.h>
-#include <dos.h>
 
 /* Forward declarations */
 static void fossil_put_pipe(const char *s);
@@ -18,8 +22,14 @@ static void redraw_chat_input(void);
    CONSTANTS
    ============================================================================ */
 
-#define MSG_MAX        100   /* ring buffer for pre-wrapped lines */
-#define MSG_LEN        200
+/* Scrollback ring buffer. Raised from 100 to 250 so /bbses (170+ rows) is
+ * fully scrollable. At 250 * 160 = 40KB, Watcom's compact memory model
+ * auto-places g_msgs in a separate FAR_DATA segment, so this doesn't eat
+ * DGROUP (still ~25KB, well under the 64KB limit). MSG_LEN dropped from
+ * 200 to 160 to keep the far segment tidy — wrapped 78-col lines with
+ * embedded pipe codes fit comfortably under 160 bytes. */
+#define MSG_MAX        250
+#define MSG_LEN        160
 #define INPUT_RULE_ROW  23
 #define INPUT_PROMPT_ROW 24
 #define SCREEN_W        80
@@ -603,7 +613,7 @@ static void draw_help(void) {
         fossil_put_pipe("|15MRC|07 (Multi-Relay Chat) links BBSes for real-time chat.\r\n");
         fossil_put_pipe("|07Users on any MRC-connected BBS share the same rooms.\r\n\r\n");
         fossil_put_pipe("|11Network: |07MRC relay (NA/EU/AU, set in MRCBBS.DAT)\r\n");
-        fossil_put_pipe("|11Protocol:|07 MRC 1.3  |11Client:|07 ANETMRC 1.3.8\r\n\r\n");
+        fossil_put_pipe("|11Protocol:|07 MRC 1.3  |11Client:|07 ANETMRC 1.3.9\r\n\r\n");
         fossil_put_pipe("|15Tips:\r\n|07");
         fossil_put_pipe(" /identify <pw>  Register/log in to MRC Trust\r\n");
         fossil_put_pipe(" /join <room>    Switch rooms\r\n");
@@ -997,7 +1007,7 @@ static void show_mentions_pane(void) {
 
         while (!done) {
             int ch = fossil_getch_nonblock();
-            if (ch < 0) { delay(20); continue; }
+            if (ch < 0) { anet_delay(20); continue; }
 
             if (ch == 13 || ch == 10) { done = 2; break; }
 
@@ -1006,13 +1016,13 @@ static void show_mentions_pane(void) {
                 for (r = 0; r < 25; ++r) {
                     ch2 = fossil_getch_nonblock();
                     if (ch2 >= 0) break;
-                    delay(2);
+                    anet_delay(2);
                 }
                 if (ch2 != '[' && ch2 != 'O') { done = 2; break; }
                 for (r = 0; r < 25; ++r) {
                     ch3 = fossil_getch_nonblock();
                     if (ch3 >= 0) break;
-                    delay(2);
+                    anet_delay(2);
                 }
                 if (ch3 == '5' || ch3 == 'I') {
                     if (ch3 == '5') (void)fossil_getch_nonblock();
@@ -1766,29 +1776,41 @@ int main(int argc, char **argv) {
     char line[512];
     int ch;
     int stats_wait = 0;
+#ifndef ANETMRC_LOCAL_ONLY
     int i;
+#endif
     int idle_count = 0;
 
     memset(&drop,  0, sizeof(drop));
     memset(g_input, 0, sizeof(g_input));
     safe_copy(status, sizeof(status), "READY");
 
+#ifdef ANETMRC_LOCAL_ONLY
+    /* Native Win32 local client (anetmrc_l.exe): always local mode, no BBS
+     * dropfile, no --local flag required. */
+    (void)argc; (void)argv;
+    g_local_mode = 1;
+#else
     for (i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "--local") == 0) {
             g_local_mode = 1;
             break;
         }
     }
+#endif
 
     if (g_local_mode) {
         safe_copy(drop.user_name, sizeof(drop.user_name), "SysOp");
         safe_copy(drop.alias,     sizeof(drop.alias),     "SysOp");
         drop.comm_port = 0;
         fossil_set_local_mode();
-    } else {
+    }
+#ifndef ANETMRC_LOCAL_ONLY
+    else {
         const char *drop_path = dropfile_get_path_from_args(argc, argv);
         if (!dropfile_load(&drop, drop_path)) return 1;
     }
+#endif
 
     safe_copy(g_bbs_user, sizeof(g_bbs_user),
               drop.alias[0] ? drop.alias : drop.user_name);
@@ -1977,11 +1999,12 @@ int main(int argc, char **argv) {
 
         ch = fossil_getch_nonblock();
         if (ch < 0) {
-            /* Yield to DOS via INT 28h and adaptively back off when idle. */
+            /* Yield to DOS via INT 28h and adaptively back off when idle.
+             * (INT 28h is a no-op on Win32; see anet_idle_hint in common.h.) */
             if (!got_bridge) {
-                _asm { int 28h }
+                anet_idle_hint();
                 idle_count++;
-                delay(idle_count > 10 ? 50 : 20);
+                anet_delay(idle_count > 10 ? 50 : 20);
             } else {
                 idle_count = 0;
             }
@@ -2174,21 +2197,21 @@ int main(int argc, char **argv) {
                 for (retries = 0; retries < 25; ++retries) {
                     ch2 = fossil_getch_nonblock();
                     if (ch2 >= 0) break;
-                    delay(2);
+                    anet_delay(2);
                 }
                 if (ch2 == '[' || ch2 == 'O') {
                     int ch3 = -1, ch4 = -1;
                     for (retries = 0; retries < 25; ++retries) {
                         ch3 = fossil_getch_nonblock();
                         if (ch3 >= 0) break;
-                        delay(2);
+                        anet_delay(2);
                     }
                     if (ch3 == '5' || ch3 == 'I') { /* PgUp */
                         int max_scroll = g_msg_count > CHAT_MSG_ROWS ? g_msg_count - CHAT_MSG_ROWS : 0;
                         for (retries = 0; retries < 25; ++retries) {
                             ch4 = fossil_getch_nonblock(); (void)ch4;
                             if (ch4 >= 0) break;
-                            delay(2);
+                            anet_delay(2);
                         }
                         g_scroll_off += CHAT_MSG_ROWS;
                         if (g_scroll_off > max_scroll) g_scroll_off = max_scroll;
@@ -2197,7 +2220,7 @@ int main(int argc, char **argv) {
                         for (retries = 0; retries < 25; ++retries) {
                             ch4 = fossil_getch_nonblock(); (void)ch4;
                             if (ch4 >= 0) break;
-                            delay(2);
+                            anet_delay(2);
                         }
                         g_scroll_off -= CHAT_MSG_ROWS;
                         if (g_scroll_off < 0) g_scroll_off = 0;
@@ -2261,7 +2284,7 @@ int main(int argc, char **argv) {
                         for (retries = 0; retries < 15; ++retries) {
                             ch4 = fossil_getch_nonblock(); (void)ch4;
                             if (ch4 >= 0) break;
-                            delay(2);
+                            anet_delay(2);
                         }
                         {
                             int max_scroll = g_msg_count > CHAT_MSG_ROWS ? g_msg_count - CHAT_MSG_ROWS : 0;
@@ -2274,7 +2297,7 @@ int main(int argc, char **argv) {
                         for (retries = 0; retries < 15; ++retries) {
                             ch4 = fossil_getch_nonblock(); (void)ch4;
                             if (ch4 >= 0) break;
-                            delay(2);
+                            anet_delay(2);
                         }
                         if (g_scroll_off > 0) {
                             g_scroll_off = 0;
