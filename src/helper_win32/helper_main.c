@@ -27,11 +27,13 @@ static int node_from_doorsys(void) {
 /* Parse args, pick the node, start Winsock, and enter the helper loop. */
 int main(int argc, char *argv[]) {
     WSADATA wsa;
-    int i, node = 0;
+    int i, node = 0, silent = 0;
 
     for (i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "--verbose") == 0 || strcmp(argv[i], "-d") == 0) {
             helper_verbose = 1;
+        } else if (strcmp(argv[i], "--silent") == 0 || strcmp(argv[i], "-s") == 0) {
+            silent = 1;
         } else if ((strcmp(argv[i], "-node") == 0 || strcmp(argv[i], "-port") == 0) &&
                     i + 1 < argc) {
             node = atoi(argv[++i]);
@@ -47,6 +49,15 @@ int main(int argc, char *argv[]) {
         node = node_from_doorsys();
 
     if (node > 0) helper_set_node(node);
+
+    /* --silent hides the bridge's console window so the user only sees the
+     * door/local client. The process keeps running and writes its log file
+     * (if --verbose was also given). The window must already exist for
+     * GetConsoleWindow to return non-NULL — true for a -mconsole build. */
+    if (silent) {
+        HWND hwnd = GetConsoleWindow();
+        if (hwnd) ShowWindow(hwnd, SW_HIDE);
+    }
 
     if (WSAStartup(MAKEWORD(2,2), &wsa) != 0) return 1;
     helper_run();
