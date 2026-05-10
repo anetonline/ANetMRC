@@ -592,7 +592,10 @@ static void draw_handle_entry(const dropfile_info_t *drop) {
     fossil_put_pipe("|15Enter your chat handle:|07\r\n");
     fossil_put_pipe("|08> |07");
     fossil_put_pipe(g_input);
-    fossil_putch('_');
+    /* fossil_puts (not fossil_putch) so the trailing cursor glyph forces a
+     * framebuffer flush — without it, the Win32 local client leaves the row
+     * dirty until the next keystroke, masking the typed character. */
+    fossil_puts("_");
 }
 
 /* Render the help browser page indicated by g_help_page. */
@@ -749,7 +752,7 @@ static void draw_settings_menu(void) {
 
         fossil_put_pipe("|08New value (Enter=save, Esc=cancel): |07");
         fossil_put_pipe(g_input);
-        fossil_putch('_');
+        fossil_puts("_");
     } else {
         fossil_put_pipe("|08[1-7] Edit field    [B] Back to menu|07\r\n");
         fossil_put_pipe("|08> ");
