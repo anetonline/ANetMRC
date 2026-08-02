@@ -17,30 +17,6 @@ Windows if you prefer.
 
 ## 1. Prerequisites
 
-### One-time: install the toolchains
-
-**OpenWatcom 2.0** — for the 16-bit DOS door.
-
-- Download from <https://github.com/open-watcom/open-watcom-v2/releases>
-- Install; add `$WATCOM/binl64` (Linux) or `%WATCOM%\binnt64` (Windows) to
-  your `PATH`.
-- Make sure these env vars are exported: `WATCOM`, `INCLUDE`, `EDPATH`,
-  `WIPFC`.
-
-Verify:
-```sh
-wcc -h | head -1        # should print "Open Watcom C x86 16-bit..."
-```
-
-**mingw32 (i686-w64-mingw32-gcc)** — for the Win32 helper.
-
-- Linux: `apt install mingw-w64` (Debian/Ubuntu) or `dnf install
-  mingw32-gcc-c++` (Fedora).
-- Windows: MSYS2 with `mingw-w64-i686-gcc`.
-
-Verify:
-```sh
-i686-w64-mingw32-gcc --version
 ```
 
 ### A FOSSIL driver on the BBS host
@@ -71,32 +47,11 @@ Clone or unpack the source into a working directory. Layout:
 └── INSTALL.md
 ```
 
-### Build the DOS door
-
-```sh
-cd dosdoor
-bash build_fossil_dos.sh
-```
-
-Output: `dosdoor/build/anetmrc.exe` (~60 KB, single-binary door).
-
-### Build the Win32 helper + config utility
-
-```sh
-cd ../helper_win32
-bash helper_build_win32.sh
-```
-
-Output:
-- `helper_win32/build_helper_win32/anetmrc_bridge.exe` (~200 KB)
-- `helper_win32/build_helper_win32/config.exe` (~40 KB)
-
-Both are statically-linked Windows console apps (no runtime DLLs needed
-beyond `ws2_32` which ships with Windows).
+ich ships with Windows).
 
 ---
 
-## 3. Configure the BBS identity
+## 2. Configure the BBS identity
 
 **Once** per BBS, run the config utility on the Windows host. It writes
 `MRCBBS.DAT` into the current working directory.
@@ -127,7 +82,7 @@ refuses to start.
 
 ---
 
-## 4. Deploy the runtime
+## 3. Deploy the runtime
 
 Create a **single directory** for the runtime. Everything below runs from
 it — the bridge, the DOS door, and the MRC config — because they share
@@ -156,7 +111,7 @@ Runtime files auto-generated:
 
 ---
 
-## 5. Launch the bridge
+## 4. Launch the bridge
 
 One bridge process serves **all** of your BBS nodes. Start it once — as a
 Windows service, scheduled task, or simply in a console window.
@@ -183,7 +138,7 @@ bridge picks it up automatically. No restart required when adding nodes.
 
 ---
 
-## 6. Wire the door into your BBS
+## 5. Wire the door into your BBS
 
 Add ANETMRC to your BBS's door menu using whatever mechanism your BBS
 supports. It needs:
@@ -222,7 +177,7 @@ The door reads that and picks `ANETDOS[N].OUT/.IN` automatically.
 
 ---
 
-## 7. Sysop sanity test (no BBS required)
+## 6. Sysop sanity test (no BBS required)
 
 Run the door locally against your console to verify everything builds and
 talks to the bridge:
@@ -238,7 +193,7 @@ able to connect and chat.
 
 ---
 
-## 8. Optional: bridge-console banner
+## 7. Optional: bridge-console banner
 
 If you'd like the bridge's console window to show an ANSI banner on
 startup, drop a file named `mrc_banner.ans` (CP437 ANSI art) next to
@@ -247,7 +202,7 @@ note and starts normally. (do not exceed 79x15)
 
 ---
 
-## 9. Updating
+## 8. Updating
 
 Re-run the two build scripts and drop the new `.exe` files into your
 runtime directory. `MRCBBS.DAT` and `MRCUSER.DAT` are preserved across
@@ -258,7 +213,7 @@ If the protocol version changes in a future release, the bridge's
 
 ---
 
-## 10. Uninstall
+## 9. Uninstall
 
 Stop the bridge, remove the runtime directory, remove the BBS door
 menu entry. Nothing is written outside the runtime folder.
