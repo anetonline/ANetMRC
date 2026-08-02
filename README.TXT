@@ -122,28 +122,17 @@ FEATURES
 QUICK START
 -----------
 
-  Full build and install walkthrough: INSTALL.TXT
+  Install walkthrough: INSTALL.TXT
 
-  Short form:
+ 
 
-  1. Build the DOS door (if building from source):
-        cd dosdoor
-        bash build_fossil_dos.sh
-              -> build/anetmrc.exe
-
-  2. Build the Win32 helper + config tool:
-        cd ../helper_win32
-        bash helper_build_win32.sh
-              -> build_helper_win32/anetmrc_bridge.exe
-              -> build_helper_win32/config.exe
-
-  3. Configure the BBS identity, once:
+  1. Configure the BBS identity, once:
         config.exe                 (writes MRCBBS.DAT)
 
-  4. Start the bridge on the BBS host:
+  2. Start the bridge on the BBS host:
         anetmrc_bridge.exe         (serves every node)
 
-  5. Add anetmrc.exe to your BBS doors menu the same way you add any
+  3. Add anetmrc.exe to your BBS doors menu the same way you add any
      other DOS door.  No special wrapper is needed.
 
 
