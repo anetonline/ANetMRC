@@ -25,37 +25,6 @@ on Windows if you prefer.
 1.  PREREQUISITES
 -------------------------------------------------------------------------------
 
-ONE-TIME: install the toolchains
-
-
-OPENWATCOM 2.0   -- for the 16-bit DOS door.
-
-   * Download from:
-         https://github.com/open-watcom/open-watcom-v2/releases
-
-   * Install, then add $WATCOM/binl64 (Linux) or %WATCOM%\binnt64
-     (Windows) to your PATH.
-
-   * Export these environment variables:
-         WATCOM   INCLUDE   EDPATH   WIPFC
-
-   * Verify:
-         wcc -h | head -1
-     It should print something like "Open Watcom C x86 16-bit...".
-
-
-MINGW32  (i686-w64-mingw32-gcc)  -- for the Win32 helper.
-
-   * Linux:
-         apt install mingw-w64                (Debian / Ubuntu)
-         dnf install mingw32-gcc-c++          (Fedora)
-   * Windows:
-         MSYS2  +  mingw-w64-i686-gcc
-
-   * Verify:
-         i686-w64-mingw32-gcc --version
-
-
 A FOSSIL DRIVER ON THE BBS HOST
 
    The door speaks serial through INT 14h via a FOSSIL driver.  Any of
@@ -70,43 +39,9 @@ A FOSSIL DRIVER ON THE BBS HOST
 
 
 -------------------------------------------------------------------------------
-2.  BUILDING
+2.  CONFIGURE
 -------------------------------------------------------------------------------
 
-Clone or unpack the source into a working directory.  Layout:
-
-    anetmrc/
-      |-- dosdoor/              <- the 16-bit door
-      |-- helper_win32/         <- the Win32 bridge + config tool
-      |-- README.TXT
-      |-- INSTALL.TXT   (this file)
-
-
-BUILD THE DOS DOOR:
-
-       cd dosdoor
-       bash build_fossil_dos.sh
-
-    Output:
-         dosdoor/build/anetmrc.exe          (~60 KB, single binary)
-
-
-BUILD THE WIN32 HELPER + CONFIG UTILITY:
-
-       cd ../helper_win32
-       bash helper_build_win32.sh
-
-    Output:
-         helper_win32/build_helper_win32/anetmrc_bridge.exe    (~200 KB)
-         helper_win32/build_helper_win32/config.exe            (~40 KB)
-
-    Both are statically linked Windows console apps.  No runtime DLLs
-    beyond ws2_32 (which ships with Windows) are needed.
-
-
--------------------------------------------------------------------------------
-3.  CONFIGURE THE BBS IDENTITY
--------------------------------------------------------------------------------
 
 ONCE per BBS, run the config utility on the Windows host.  It writes
 MRCBBS.DAT into the current working directory.
