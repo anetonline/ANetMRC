@@ -88,17 +88,7 @@ configuration required.
 
 *See [INSTALL.md](INSTALL.md) for the full build and setup walk-through.*
 
-```sh
-# Build the DOS door
-cd dosdoor
-bash build_fossil_dos.sh                 # → build/anetmrc.exe
-
-# Build the Win32 helper + config tool
-cd ../helper_win32
-bash helper_build_win32.sh               # → build_helper_win32/anetmrc_bridge.exe + config.exe
-
-# Configure the BBS identity (one time)
-./build_helper_win32/config.exe          # writes MRCBBS.DAT
+```
 
 # Start the bridge on the BBS host
 anetmrc_bridge.exe  # listens for any node
