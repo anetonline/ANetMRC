@@ -1,24 +1,27 @@
 ===============================================================================
-                  ANETMRC  v1.3.8  -  Installation Guide
+                  ANetMRC  v1.4.0  -  Installation Guide
 ===============================================================================
+
+
+*** IMPORTANT ***
+* IF YOU ARE UPDATING
+* You need to run config.exe again
+* It will save your existing info, but there are also NEW options/features
+* If you do not run config.exe, you will not have access to the new features
+
 
 
 This guide walks you through:
 
-    1. Building the DOS door (anetmrc.exe) and the Win32 helper
-       (anetmrc_bridge.exe + config.exe)
-
-       *** JUMP TO STEP 2 IF YOU ARE NOT BUILDING FROM SOURCE ***
-
+    1. Prerequisites (FOSSIL driver, Windows host)
     2. Configuring the BBS identity
-    3. Installing ANETMRC into your BBS as a door
+    3. Installing ANetMRC into your BBS as a door
     4. Running single-node vs. multi-node setups
     5. Sanity testing
 
-
-The build scripts target Linux + mingw32 (for the helper) and
-Linux + OpenWatcom 2.0 (for the DOS door).  Both toolchains also run
-on Windows if you prefer.
+All binaries (anetmrc.exe, anetmrc_bridge.exe, config.exe, anetmrc_l.exe)
+ship pre-built in the release package -- no compiler or build step is
+needed.
 
 
 -------------------------------------------------------------------------------
@@ -37,11 +40,13 @@ A FOSSIL DRIVER ON THE BBS HOST
 
    Install whichever FOSSIL you already use for other doors.
 
+   All three .exe files are statically linked Windows console apps.  No
+   runtime DLLs beyond ws2_32 (which ships with Windows) are needed.
+
 
 -------------------------------------------------------------------------------
-2.  CONFIGURE
+2.  CONFIGURE THE BBS IDENTITY
 -------------------------------------------------------------------------------
-
 
 ONCE per BBS, run the config utility on the Windows host.  It writes
 MRCBBS.DAT into the current working directory.
@@ -70,7 +75,7 @@ will refuse to start.
 
 
 -------------------------------------------------------------------------------
-4.  DEPLOY THE RUNTIME
+3.  DEPLOY THE RUNTIME
 -------------------------------------------------------------------------------
 
 Create a SINGLE directory for the runtime.  Everything below runs from
@@ -79,10 +84,11 @@ through files in the current working directory.
 
 Suggested layout:
 
-    C:\BBS\DOORS\ANETMRC\
-      |-- anetmrc.exe              (from dosdoor/build/)
-      |-- anetmrc_bridge.exe       (from helper_win32/build_helper_win32/)
-      |-- config.exe               (from helper_win32/build_helper_win32/)
+    C:\BBS\DOORS\ANetMRC\
+      |-- anetmrc.exe              (DOS door)
+      |-- anetmrc_bridge.exe       (Win32 bridge)
+      |-- config.exe               (Win32 config utility)
+      |-- anetmrc_l.exe            (native Win32 local client, optional)
       |-- MRCBBS.DAT               (written by config.exe)
       |-- mrc_banner.ans           (optional ANSI banner, 79 x 15 MAX)
       |-- *.OUT / *.IN / *.LOG     (auto-created at runtime)
@@ -105,7 +111,7 @@ RUNTIME FILES THAT AUTO-CREATE:
 
 
 -------------------------------------------------------------------------------
-5.  LAUNCH THE BRIDGE
+4.  LAUNCH THE BRIDGE
 -------------------------------------------------------------------------------
 
 One bridge process serves ALL of your BBS nodes.  Start it once -- as a
@@ -128,10 +134,10 @@ when you add nodes.
 
 
 -------------------------------------------------------------------------------
-6.  WIRE THE DOOR INTO YOUR BBS
+5.  WIRE THE DOOR INTO YOUR BBS
 -------------------------------------------------------------------------------
 
-Add ANETMRC to your BBS's door menu using whatever mechanism your BBS
+Add ANetMRC to your BBS's door menu using whatever mechanism your BBS
 supports.  It needs:
 
     * A DOOR.SYS dropfile       (standard - most BBSes emit this
@@ -143,14 +149,14 @@ supports.  It needs:
 SPITFIRE  (DOORS.SF entry):
 
   ;Name      Path                           Parms           Shell  Multi  Prompt
-  ANETMRC    C:\BBS\DOORS\ANETMRC           anetmrc.exe     N      Y      Y
+  ANetMRC    C:\BBS\DOORS\ANetMRC           anetmrc.exe     N      Y      Y
 
 
 SYNCHRONET / MYSTIC / etc.:
 
-  [ANETMRC]
+  [ANetMRC]
   Name       = MRC Chat
-  Path       = C:\BBS\DOORS\ANETMRC\
+  Path       = C:\BBS\DOORS\ANetMRC\
   CmdLine    = anetmrc.exe --dropfile=C:\path\to\door.sys
   NodeInfo   = DOOR.SYS
 
@@ -158,7 +164,7 @@ SYNCHRONET / MYSTIC / etc.:
 GENERIC DOS BBS BATCH FILE:
 
   @echo off
-  cd C:\BBS\DOORS\ANETMRC
+  cd C:\BBS\DOORS\ANetMRC
   anetmrc.exe --dropfile=C:\path\to\door.sys
 
 
@@ -168,22 +174,39 @@ matching ANETDOS[N].OUT / .IN pair automatically.
 
 
 -------------------------------------------------------------------------------
-7.  SYSOP SANITY TEST  (no BBS required)
+6.  SYSOP SANITY TEST  (no BBS required)
 -------------------------------------------------------------------------------
 
-Run the door locally against your console to verify everything builds
-and talks to the bridge:
+Two ways to run the client locally, no BBS involved.  Both use the same
+bridge -- start the bridge first in another console window.
+
+ON MODERN WINDOWS (10 / 11):
+
+       anetmrc_l.exe
+
+    The native Win32 local client.  Runs in any cmd / PowerShell window
+    or Windows Terminal.  Enables Virtual Terminal processing, sets the
+    console code page to 437, and renders the same pipe-code ANSI UI
+    as the DOS door -- colors, block-char rules, scrollback, tab
+    autocomplete.  Uses bridge files ANETDOS0.OUT / ANETDOS0.IN so it
+    does NOT collide with a live node 1.
+
+    No DOSBox, no FOSSIL driver, no dropfile.  Just run it.
+
+ON DOS (real hardware, dosemu, DOSBox):
 
        anetmrc.exe --local
 
-This bypasses FOSSIL and reads from stdin / writes to stdout.  Node 0
-is used (so ANETDOS.OUT / ANETDOS.IN).  With the bridge running in
-another window, you should see the handle entry screen, the main menu,
-and be able to connect and chat.
+    The DOS door itself with FOSSIL bypassed -- reads from stdin,
+    writes to stdout.  Useful for testing directly on the DOS side
+    without a real BBS session.  Also uses ANETDOS0.OUT / ANETDOS0.IN.
+
+Both paths share the same MRCUSER.DAT so your handle and colors are
+preserved between local and BBS sessions.
 
 
 -------------------------------------------------------------------------------
-8.  OPTIONAL: BRIDGE CONSOLE BANNER
+7.  OPTIONAL: BRIDGE CONSOLE BANNER
 -------------------------------------------------------------------------------
 
 If you'd like the bridge's console window to show an ANSI banner at
@@ -195,19 +218,18 @@ short note and starts normally.
 
 
 -------------------------------------------------------------------------------
-9.  UPDATING
+8.  UPDATING
 -------------------------------------------------------------------------------
 
-Re-run the two build scripts and drop the new .exe files into your
-runtime directory.  MRCBBS.DAT and MRCUSER.DAT are preserved across
-upgrades.
+Download the new release and drop the new .exe files into your runtime
+directory.  MRCBBS.DAT and MRCUSER.DAT are preserved across upgrades.
 
 If the protocol version changes in a future release, the bridge's
 version_info field will say so - check anetmrc_bridge.log on startup.
 
 
 -------------------------------------------------------------------------------
-10. UNINSTALL
+9.  UNINSTALL
 -------------------------------------------------------------------------------
 
 Stop the bridge, remove the runtime directory, and remove the BBS door

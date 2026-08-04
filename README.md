@@ -1,7 +1,13 @@
-# ANetMRC — MRC 1.3 Chat Client for DOS BBSes
+# ANetMRC — MRC 1.4 Chat Client for DOS BBSes
+
+*** IMPORTANT ***
+* IF YOU ARE UPDATING 
+* You need to run config.exe again 
+* It will save your existing info, but there are also NEW options/features
+* If you do not run config.exe, you will not have access to the new features
 
 
-**PLEASE, Report ANY bug/issues/concerns to StingRay [@] a-net-online.lol or a-net-online [@] proton.me**
+**PLEASE, Report ANY bug/issues/concerns to StingRay@a-net-online.lol or a-net-online@proton.me**
 
 
 **ANetMRC** is a full MRC (Multi-Relay Chat) 1.3 client for any DOS-native BBS
@@ -13,8 +19,8 @@ The project is a two-process design:
 
 | Component | Runs on | Job |
 |---|---|---|
-| **`anetmrc.exe`** | 16-bit DOS (OpenWatcom) | The door itself — reads DOOR.SYS, renders the chat UI over the serial line via FOSSIL, captures keys. |
-| **`anetmrc_bridge.exe`** | Win32 (mingw32, i686) | Bridge process — holds the TCP connection to the MRC server, translates packets, handles TLS/CTCP. |
+| **`anetmrc.exe`** | 16-bit DOS | The door itself — reads DOOR.SYS, renders the chat UI over the serial line via FOSSIL, captures keys. |
+| **`anetmrc_bridge.exe`** | Win32 | Bridge process — holds the TCP connection to the MRC server, translates packets, handles TLS/CTCP. |
 | **`config.exe`** | Win32 | One-time configuration utility — writes `MRCBBS.DAT`. |
 
 The two processes talk through per-node text files (`ANETDOS[N].OUT` /
@@ -86,9 +92,13 @@ configuration required.
 
 ## Quick Start
 
-*See [INSTALL.md](INSTALL.md) for the full build and setup walk-through.*
+*See [INSTALL.md](INSTALL.md) for the full setup walk-through.*
 
-```
+All binaries ship pre-built in the release package — no compiler needed.
+
+```sh
+# Configure the BBS identity (one time)
+config.exe                          # writes MRCBBS.DAT
 
 # Start the bridge on the BBS host
 anetmrc_bridge.exe  # listens for any node
@@ -240,11 +250,6 @@ and 10 (alias) are consulted; the rest is ignored.
 
 ## Requirements
 
-### Building
-- **OpenWatcom** 2.0 (for the 16-bit DOS door) — any recent build works
-- **mingw32** (i686-w64-mingw32-gcc) on Linux or Windows for the Win32 helper
-- GNU `bash` to run the two build scripts
-
 ### Running
 - Any DOS-native BBS that produces a standard `DOOR.SYS` (Spitfire, Mystic,
   Synchronet-DOS, Renegade, Wildcat, MBBS, …)
@@ -303,7 +308,6 @@ https://conchaos.synchro.net • telnet://conchaos.synchro.net • ssh://conchao
 https://github.com/codefenix-dev/uMRC
 
 - **StingRay / A-Net Online BBS** — design, testing, and dogfooding.
-
 https://a-net.online
 telnet://a-net.online:1337
 ssh://a-net.online:1338

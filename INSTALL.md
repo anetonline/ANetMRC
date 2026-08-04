@@ -1,23 +1,29 @@
-# ANETMRC — Installation Guide
+# ANetMRC — Installation Guide
 
-This guide walks you through: **JUMP TO STEP 2 IF YOU ARE NOT BUILDING FROM SOURCE**
 
-1. Building the DOS door (`anetmrc.exe`) and the Win32 helper
-   (`anetmrc_bridge.exe` + `config.exe`)
+*** IMPORTANT ***
+* IF YOU ARE UPDATING 
+* You need to run config.exe again 
+* It will save your existing info, but there are also NEW options/features
+* If you do not run config.exe, you will not have access to the new features
+
+
+
+This guide walks you through:
+
+1. Prerequisites (FOSSIL driver, Windows host)
 2. Configuring the BBS identity
-3. Installing ANETMRC into your BBS as a door
+3. Installing ANetMRC into your BBS as a door
 4. Running single-node vs. multi-node setups
 5. Sanity testing
 
-The build scripts target **Linux + mingw32** (for the helper) and
-**Linux + OpenWatcom 2.0** (for the DOS door). Both toolchains also run on
-Windows if you prefer.
+All binaries (`anetmrc.exe`, `anetmrc_bridge.exe`, `config.exe`,
+`anetmrc_l.exe`) ship pre-built in the release package — no compiler or
+build step is needed.
 
 ---
 
 ## 1. Prerequisites
-
-```
 
 ### A FOSSIL driver on the BBS host
 
@@ -32,22 +38,9 @@ work:
 
 Install and load whichever you already use for other doors.
 
----
-
-## 2. Building
-
-Clone or unpack the source into a working directory. Layout:
-
-```
-/path/to/anetmrc/
-├── dosdoor/              ← the 16-bit door
-├── helper_win32/         ← the Win32 bridge + config tool
-├── MRC-DEV-DOCS.TXT      ← protocol reference
-├── README.md
-└── INSTALL.md
-```
-
-ich ships with Windows).
+All `.exe` files in the release package are statically-linked Windows
+console apps (no runtime DLLs needed beyond `ws2_32`, which ships with
+Windows).
 
 ---
 
@@ -55,6 +48,7 @@ ich ships with Windows).
 
 **Once** per BBS, run the config utility on the Windows host. It writes
 `MRCBBS.DAT` into the current working directory.
+(WILL NEED TO BE DONE AGAIN, FOR THE 1.4 UPDATE)
 
 ```
 cd \path\to\anetmrc
@@ -91,10 +85,10 @@ state through files in the current working directory.
 Suggested layout:
 
 ```
-C:\BBS\DOORS\ANETMRC\
-├── anetmrc.exe              ← from dosdoor/build/
-├── anetmrc_bridge.exe       ← from helper_win32/build_helper_win32/
-├── config.exe               ← from helper_win32/build_helper_win32/
+C:\BBS\DOORS\ANetMRC\
+├── anetmrc.exe              ← DOS door
+├── anetmrc_bridge.exe       ← Win32 bridge
+├── config.exe               ← Win32 config utility
 ├── MRCBBS.DAT               ← written by config.exe
 ├── mrc_banner.ans           ← (optional) ANSI banner for the bridge console * SIZE MATTERS!(79x15) Cannot exceed
 └── *.OUT / *.IN / .LOG      ← auto-created at runtime
@@ -140,7 +134,7 @@ bridge picks it up automatically. No restart required when adding nodes.
 
 ## 5. Wire the door into your BBS
 
-Add ANETMRC to your BBS's door menu using whatever mechanism your BBS
+Add ANetMRC to your BBS's door menu using whatever mechanism your BBS
 supports. It needs:
 
 - A DOOR.SYS dropfile (standard — most BBSes emit this automatically)
@@ -151,15 +145,15 @@ supports. It needs:
 
 ```
 ;Name       Path                          Parms           Shell  Multi  Prompt
-ANETMRC     C:\BBS\DOORS\ANETMRC          anetmrc.exe     N      Y      Y
+ANetMRC     C:\BBS\DOORS\ANetMRC          anetmrc.exe     N      Y      Y
 ```
 
 ### Example — Synchronet / Mystic / etc.
 
 ```
-[ANETMRC]
+[ANetMRC]
 Name       = MRC Chat
-Path       = C:\BBS\DOORS\ANETMRC\
+Path       = C:\BBS\DOORS\ANetMRC\
 CmdLine    = anetmrc.exe --dropfile=C:\path\to\door.sys
 NodeInfo   = DOOR.SYS
 ```
@@ -168,7 +162,7 @@ NodeInfo   = DOOR.SYS
 
 ```bat
 @echo off
-cd C:\BBS\DOORS\ANETMRC
+cd C:\BBS\DOORS\ANetMRC
 anetmrc.exe --dropfile=C:\path\to\door.sys
 ```
 
@@ -179,8 +173,8 @@ The door reads that and picks `ANETDOS[N].OUT/.IN` automatically.
 
 ## 6. Sysop sanity test (no BBS required)
 
-Run the door locally against your console to verify everything builds and
-talks to the bridge:
+Run the door locally against your console to verify it talks to the
+bridge correctly:
 
 ```
 anetmrc.exe --local
@@ -204,9 +198,8 @@ note and starts normally. (do not exceed 79x15)
 
 ## 8. Updating
 
-Re-run the two build scripts and drop the new `.exe` files into your
-runtime directory. `MRCBBS.DAT` and `MRCUSER.DAT` are preserved across
-upgrades.
+Download the new release and drop the new `.exe` files into your runtime
+directory. `MRCBBS.DAT` and `MRCUSER.DAT` are preserved across upgrades.
 
 If the protocol version changes in a future release, the bridge's
 `version_info` field will say so — check `anetmrc_bridge.log` on startup.

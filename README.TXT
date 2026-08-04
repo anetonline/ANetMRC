@@ -1,6 +1,6 @@
 ===============================================================================
-                       ANETMRC  v1.3.8
-              MRC 1.3 Chat Client for DOS BBSes
+                       ANetMRC  v1.4.0
+              MRC 1.4 Chat Client for DOS BBSes
                   by StingRay / A-Net Online BBS
 ===============================================================================
 
@@ -8,10 +8,19 @@
     StingRay@a-net-online.lol    or    a-net-online@proton.me
 
 
+   *** IMPORTANT ***
+* IF YOU ARE UPDATING
+* You need to run config.exe again
+* It will save your existing info, but there are also NEW options/features
+* If you do not run config.exe, you will not have access to the new features
+
+
+
+
 ABOUT
 -----
 
-  ANETMRC is a full MRC (Multi-Relay Chat) 1.3 client for any DOS-native
+  ANetMRC is a full MRC (Multi-Relay Chat) 1.3 client for any DOS-native
   BBS that produces a DOOR.SYS dropfile and runs a FOSSIL driver.  It
   lets users on your BBS join the live MRC network and chat in real time
   with users on other BBSes around the world.
@@ -122,9 +131,9 @@ FEATURES
 QUICK START
 -----------
 
-  Install walkthrough: INSTALL.TXT
+  Full install walkthrough: INSTALL.TXT
 
- 
+  Short form:
 
   1. Configure the BBS identity, once:
         config.exe                 (writes MRCBBS.DAT)
@@ -242,7 +251,7 @@ CONFIGURATION FILES
 
   DOOR.SYS   (standard BBS dropfile)
 
-      ANETMRC only reads four lines:
+      ANetMRC only reads four lines:
          Line 1   COM port (e.g. COM1:) -> node number
          Line 2   baud rate
          Line 6   user name
@@ -264,19 +273,14 @@ COMMAND-LINE FLAGS
                     otherwise multi-node mode
      -node N        Fixed single-node mode for node N (1 - 8)
      --verbose /-d  Diagnostic logging to anetmrc_bridge.log
+     --silent /-s   Hide the bridge's console window after start
+                    (useful for the local Win32 client so the user
+                     only sees anetmrc_l.exe; combine with --verbose
+                     to keep log file output)
 
 
 REQUIREMENTS
 ------------
-
-  BUILDING (if compiling from source):
-
-     * OpenWatcom 2.0           for the 16-bit DOS door
-     * mingw32 (i686-w64-mingw32-gcc)
-                                for the Win32 bridge and config tool
-     * GNU bash                 to run the two build scripts
-
-  RUNNING:
 
      * Any DOS-native BBS that writes a standard DOOR.SYS
          (Spitfire, Mystic, Synchronet-DOS, Renegade, Wildcat, MBBS, ...)
