@@ -10,7 +10,7 @@
 * If you do not run config.exe, you will not have access to the new features
 
 
-**PLEASE, Report ANY bug/issues/concerns to StingRay@a-net-online.lol or a-net-online@proton.me**
+**PLEASE, Report ANY bug/issues/concerns to StingRay [at] a-net-online.lol or a-net-online [at] proton.me**
 
 
 **ANetMRC** is a full MRC (Multi-Relay Chat) 1.3 client for any DOS-native BBS
