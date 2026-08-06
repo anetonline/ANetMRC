@@ -1,3 +1,6 @@
+<img width="514" height="386" alt="image" src="https://github.com/user-attachments/assets/88fb6710-ac8a-4d31-83ba-85c83cde6e42" />
+
+
 # ANetMRC — MRC 1.4 Chat Client for DOS BBSes
 
 *** IMPORTANT ***
